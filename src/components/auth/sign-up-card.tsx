@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 
 import { FcGoogle } from "react-icons/fc";
 import { FaGithub } from "react-icons/fa";
@@ -17,7 +17,6 @@ import {
 import {
 	Form,
 	FormControl,
-	FormDescription,
 	FormField,
 	FormItem,
 	FormLabel,
@@ -26,9 +25,12 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Separator } from "../ui/separator";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { TriangleAlert } from "lucide-react";
 
 const formSchema = z
 	.object({
+		name: z.string().max(50),
 		email: z.string().email({ message: "Invalid email address" }),
 		password: z
 			.string()
@@ -49,18 +51,39 @@ interface SignUpCardProps {
 }
 
 function SignUpCard({ setState }: SignUpCardProps) {
+	const { signIn } = useAuthActions();
+	const [isPending, setIsPending] = useState(false);
+	const [error, setError] = useState("");
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
+			name: "",
 			email: "",
 			password: "",
 			confirm_password: "",
 		},
 	});
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
+	function handleProvider(value: "github" | "google") {
+		setIsPending(true);
+		signIn(value).finally(() => {
+			setIsPending(false);
+		});
 	}
+
+	function onSubmit(values: z.infer<typeof formSchema>) {
+		setIsPending(true);
+		const { confirm_password, ...signUpData } = values;
+		signIn("password", { ...signUpData, flow: "signUp" })
+			.catch((e) => {
+				console.log(e);
+				setError("Something went wrong");
+			})
+			.finally(() => {
+				setIsPending(false);
+			});
+	}
+
 	return (
 		<Card className="w-full h-full p-8">
 			<CardHeader className="px-0 pt-0">
@@ -69,6 +92,12 @@ function SignUpCard({ setState }: SignUpCardProps) {
 					Use your email or another service to continue
 				</CardDescription>
 			</CardHeader>
+			{!!error && (
+				<div className="bg-destructive/15 p-3 rounded-md flex items-center gap-x-2 text-sm text-destructive mb-6">
+					<TriangleAlert className="size-4" />
+					<p>{error}</p>
+				</div>
+			)}
 			<CardContent className="space-y-5 px-0 pb-0">
 				<Form {...form}>
 					<form
@@ -77,13 +106,30 @@ function SignUpCard({ setState }: SignUpCardProps) {
 					>
 						<FormField
 							control={form.control}
+							name="name"
+							render={({ field }) => (
+								<FormItem>
+									<FormLabel>Full Name</FormLabel>
+									<FormControl>
+										<Input
+											disabled={false || isPending}
+											placeholder="John Doe"
+											{...field}
+										/>
+									</FormControl>
+									<FormMessage />
+								</FormItem>
+							)}
+						/>
+						<FormField
+							control={form.control}
 							name="email"
 							render={({ field }) => (
 								<FormItem>
 									<FormLabel>Email</FormLabel>
 									<FormControl>
 										<Input
-											disabled={false}
+											disabled={false || isPending}
 											placeholder="john.doe@example.com"
 											{...field}
 										/>
@@ -100,7 +146,7 @@ function SignUpCard({ setState }: SignUpCardProps) {
 									<FormLabel>Passsword</FormLabel>
 									<FormControl>
 										<Input
-											disabled={false}
+											disabled={false || isPending}
 											type="password"
 											placeholder="********"
 											{...field}
@@ -118,7 +164,7 @@ function SignUpCard({ setState }: SignUpCardProps) {
 									<FormLabel>Confirm Passsword</FormLabel>
 									<FormControl>
 										<Input
-											disabled={false}
+											disabled={false || isPending}
 											type="password"
 											placeholder="********"
 											{...field}
@@ -132,7 +178,7 @@ function SignUpCard({ setState }: SignUpCardProps) {
 							type="submit"
 							className="w-full"
 							size={"lg"}
-							disabled={false}
+							disabled={false || isPending}
 						>
 							Continue
 						</Button>
@@ -143,8 +189,8 @@ function SignUpCard({ setState }: SignUpCardProps) {
 
 				<div className="flex flex-col gap-y-2.5">
 					<Button
-						disabled={false}
-						onClick={() => {}}
+						disabled={false && isPending}
+						onClick={() => handleProvider("google")}
 						variant={"outline"}
 						size={"lg"}
 						className="w-full relative"
@@ -153,8 +199,8 @@ function SignUpCard({ setState }: SignUpCardProps) {
 						Continue with Google
 					</Button>
 					<Button
-						disabled={false}
-						onClick={() => {}}
+						disabled={false && isPending}
+						onClick={() => handleProvider("github")}
 						variant={"outline"}
 						size={"lg"}
 						className="w-full relative"
