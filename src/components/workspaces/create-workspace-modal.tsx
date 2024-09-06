@@ -24,6 +24,7 @@ import {
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { useCreateWorkspace } from "@/api/use-create-workspace";
+import { toast } from "sonner";
 
 const formSchema = z.object({
 	name: z.string().min(1, { message: "Workspace name is required" }),
@@ -33,8 +34,7 @@ type Props = {};
 
 function CreateWorkspaceModal({}: Props) {
 	const router = useRouter();
-	const { mutate, data, isPending, isError, error, isSuccess, isSettled } =
-		useCreateWorkspace();
+	const { mutate, isPending } = useCreateWorkspace();
 	const [open, setOpen] = useCreateWorkspaceModal();
 	const form = useForm<z.infer<typeof formSchema>>({
 		resolver: zodResolver(formSchema),
@@ -50,10 +50,12 @@ function CreateWorkspaceModal({}: Props) {
 	async function onSubmit(values: z.infer<typeof formSchema>) {
 		mutate(values, {
 			onSuccess: (id) => {
+				toast.success("Workspace created successfully");
 				router.push(`/workspace/${id}`);
 				handleClose();
 			},
 			onError: (error) => {
+				toast.error("Failed to create workspace");
 				console.log(error);
 			},
 		});

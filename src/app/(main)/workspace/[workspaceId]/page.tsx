@@ -1,12 +1,13 @@
+"use client";
+
 import React from "react";
+import { useWorkspaceId } from "@/hooks/use-workspace-id";
+import { useGetWorkspace } from "@/api/use-get-workspace";
 
-interface Props {
-	params: {
-		workspaceId: string;
-	};
-}
+function WorkspaceIdPage() {
+	const workspaceId = useWorkspaceId();
+	const { data, isLoading } = useGetWorkspace({ id: workspaceId });
 
-function WorkspaceIdPage({ params: { workspaceId } }: Props) {
 	return <div>WorkspaceId: {workspaceId}</div>;
 }
 
