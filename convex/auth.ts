@@ -5,7 +5,7 @@ import { z } from "zod";
 import { DataModel } from "./_generated/dataModel";
 
 const ParamsSchema = z.object({
-	name: z.string().max(50),
+	name: z.string().max(50).optional(),
 	email: z.string().email(),
 	password: z.string().min(3).max(50),
 });
