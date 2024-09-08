@@ -1,24 +1,36 @@
 import { useCurrentMember } from "@/api/use-current-member";
 import { useGetWorkspace } from "@/api/use-get-workspace";
 import { useWorkspaceId } from "@/hooks/use-workspace-id";
-import { AlertTriangle, Loader } from "lucide-react";
+import {
+	AlertTriangle,
+	HashIcon,
+	Loader,
+	MessageSquareText,
+	SendHorizonal,
+} from "lucide-react";
 import React from "react";
 import WorkspaceHeader from "./workspace-header";
+import SidebarItem from "./sidebar-item";
+import { useGetChannels } from "@/api/use-get-channels";
+import WorkspaceSection from "./workspace-section";
 
 type Props = {};
 
 function WorkspaceSidebar({}: Props) {
 	const workspaceId = useWorkspaceId();
 
-	const { data: currentMember, isLoading: isCurrentMemberLoading } =
+	const { data: currentMember, isLoading: currentMemberLoading } =
 		useCurrentMember({
 			workspaceId,
 		});
-	const { data: workspace, isLoading: isWorkspaceLoading } = useGetWorkspace({
+	const { data: workspace, isLoading: workspaceLoading } = useGetWorkspace({
 		id: workspaceId,
 	});
+	const { data: channels, isLoading: channelsLoading } = useGetChannels({
+		workspaceId,
+	});
 
-	if (isCurrentMemberLoading || isWorkspaceLoading) {
+	if (currentMemberLoading || workspaceLoading) {
 		return (
 			<div className="flex flex-col bg-[#5E2C5F] h-full items-center justify-center">
 				<Loader className="size-5 animate-spin text-white" />
@@ -41,6 +53,32 @@ function WorkspaceSidebar({}: Props) {
 				workspace={workspace}
 				isAdmin={currentMember.role === "admin"}
 			/>
+			<div className="flex flex-col px-2 mt-3">
+				<SidebarItem
+					label="Thread"
+					icon={MessageSquareText}
+					id="threads"
+				/>
+				<SidebarItem
+					label="Drafts & Sent"
+					icon={SendHorizonal}
+					id="drafts"
+				/>
+			</div>
+			<WorkspaceSection
+				label="Channels"
+				hint="New Channel"
+				onNew={() => {}}
+			>
+				{channels?.map((item) => (
+					<SidebarItem
+						key={item._id}
+						label={item.name}
+						icon={HashIcon}
+						id={item._id}
+					/>
+				))}
+			</WorkspaceSection>
 		</div>
 	);
 }
