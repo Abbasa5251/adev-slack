@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import CreateWorkspaceModal from "./workspaces/create-workspace-modal";
+import CreateChannelModal from "./channels/create-channel-modal";
 
 type Props = {};
 
@@ -16,6 +17,7 @@ function Modals({}: Props) {
 
 	return (
 		<>
+			<CreateChannelModal />
 			<CreateWorkspaceModal />
 		</>
 	);
